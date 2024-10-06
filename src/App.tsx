@@ -1,13 +1,46 @@
 import AvTimerIcon from '@mui/icons-material/AvTimer';
-import Stack from '@mui/material/Stack';
-import TextField from '@mui/material/TextField'; 
 import Button from '@mui/material/Button'
-import { useState } from 'react'
+import Stack from '@mui/material/Stack';
+import StopCircle from '@mui/icons-material/StopCircle';
+import TextField from '@mui/material/TextField'; 
 import Typography from '@mui/material/Typography';
+import { useRef, useState } from 'react'
 
 function App() {
-  const [duration, setDuration] = useState<number | null>(null);
-  const [remainingTime, setRemainingTime] = useState<number | null>(duration);
+  const [duration, setDuration] = useState<string>("");
+  const [remainingTime, setRemainingTime] = useState<number>(0);
+  const intRef = useRef<number | null>(null);
+
+  function StartTimer() {
+    //Assign field to variable that will be getting decremented
+    setRemainingTime(+duration);
+    
+    //Create a ref for the Interval funtion so it can be cleared later
+    intRef.current = setInterval(DecrementTime, 1000);
+  }
+
+  function DecrementTime() {
+    setRemainingTime(DecrementHelper);
+  }
+
+  function DecrementHelper(oldRemainingTime: number) : number {
+    let newRemainingTime = oldRemainingTime! - 1;
+
+    if(newRemainingTime === 0){
+      clearInterval(intRef.current!);
+    }
+
+    return newRemainingTime;
+  }
+
+  function ClearRemainingTime() {
+    clearInterval(intRef.current!);
+    setRemainingTime(0);
+  }
+
+  /*MultiInputTimeRangeField
+  look at mui time fields and time pickers for setting timer value and masks for displaying remaining time
+  */
 
   return (
     <Stack spacing={2}>
@@ -16,23 +49,23 @@ function App() {
 
       <TextField label="Timer Duration (seconds)" 
                 type="number" 
-                value={duration??""}
-                onChange={evt => setDuration(+evt.target.value)}
+                value={duration}
+                onChange={evt => setDuration(evt.target.value)}
       />
       
       <Button variant="contained" 
               endIcon={<AvTimerIcon />}
-              onClick={() => {
-                setRemainingTime(duration);
-                setInterval(() => {
-                  setRemainingTime((previous) => {
-                    let next = previous! - .5;
-                    return next;
-                  });
-                }, 500)}
-              }
+              disabled={duration === "" || remainingTime !== 0}
+              onClick={StartTimer}
               >
         Start Timer
+      </Button>
+
+      <Button variant="contained" 
+              endIcon={<StopCircle/>}
+              onClick={ClearRemainingTime}
+              >
+        Cancel Timer
       </Button>
 
       <Typography variant="h3">
